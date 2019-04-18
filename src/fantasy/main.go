@@ -18,7 +18,7 @@ func main() {
 	//Database connection
 	database.DbConnect()
 	defer database.Db.Close()
-	port := os.Getenv("PORT")
+	port := ":" + os.Getenv("PORT")
 	//port := ":8000"
 	//Init Router
 	r := mux.NewRouter()
