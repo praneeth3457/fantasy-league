@@ -20,9 +20,9 @@ var (
 func DbConnect() {
 	var err error
 
-	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-		server, user, password, port, database)
-	Db, err = sql.Open("sqlserver", connString)
+	//connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
+	//	server, user, password, port, database)
+	Db, err = sql.Open("sqlserver", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Error creating connection pool: " + err.Error())
 	}
