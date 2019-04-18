@@ -1,4 +1,4 @@
-module falcons-fantasy/src/fantasy
+module src/fantasy
 
 go 1.12
 
@@ -17,10 +17,10 @@ require (
 )
 
 replace (
-	authorization => ./falcons-fantasy/src/fantasy/authorization
-	constant => ./falcons-fantasy/src/fantasy/constant
-	db => ./falcons-fantasy/src/fantasy/database
-	hashing => ./falcons-fantasy/src/fantasy/hashing
-	models => ./falcons-fantasy/src/fantasy/models
-	routes => ./falcons-fantasy/src/fantasy/routes
+	authorization => ./src/fantasy/authorization
+	constant => ./src/fantasy/constant
+	db => ./src/fantasy/database
+	hashing => ./src/fantasy/hashing
+	models => ./src/fantasy/models
+	routes => ./src/fantasy/routes
 )
