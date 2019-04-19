@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	//authorization "authorization"
+	authorization "authorization"
 	"db"
 	"hashing"
 	model "models"
@@ -74,34 +74,33 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 //VerifyUser :
 func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode("Success :)")
-	// var user model.User
-	// var username string
-	// var password string
-	// tx, _ := database.Db.Begin()
-	// _ = json.NewDecoder(r.Body).Decode(&user)
-	// err := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username)).Scan(&username, &password)
-	// var isValid = hashing.ComparePasswords(password, []byte(user.Password))
-	// if err != nil {
-	// 	log.Println("Rollback for create user")
-	// 	tx.Rollback()
-	// 	json.NewEncoder(w).Encode(err)
-	// 	log.Fatal(err)
-	// }
+	var user model.User
+	var username string
+	var password string
+	tx, _ := database.Db.Begin()
+	_ = json.NewDecoder(r.Body).Decode(&user)
+	err := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username)).Scan(&username, &password)
+	var isValid = hashing.ComparePasswords(password, []byte(user.Password))
+	if err != nil {
+		log.Println("Rollback for create user")
+		tx.Rollback()
+		json.NewEncoder(w).Encode(err)
+		log.Fatal(err)
+	}
 
-	// tx.Commit()
-	// if !isValid {
-	// 	json.NewEncoder(w).Encode(isValid)
-	// } else {
-	// 	tokenString, err := authorization.GenerateJWT(user.Username)
-	// 	if err != nil {
-	// 		fmt.Println("Error generating token")
-	// 		json.NewEncoder(w).Encode("Error generating token")
-	// 		log.Fatal("Error generating token")
-	// 	}
-	// 	fmt.Println(tokenString)
-	// 	json.NewEncoder(w).Encode(tokenString)
-	// }
+	tx.Commit()
+	if !isValid {
+		json.NewEncoder(w).Encode(isValid)
+	} else {
+		tokenString, err := authorization.GenerateJWT(user.Username)
+		if err != nil {
+			fmt.Println("Error generating token")
+			json.NewEncoder(w).Encode("Error generating token")
+			log.Fatal("Error generating token")
+		}
+		fmt.Println(tokenString)
+		json.NewEncoder(w).Encode(tokenString)
+	}
 
 }
 
