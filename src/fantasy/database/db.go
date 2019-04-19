@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
-	//"fmt"
-	"os"
+	"fmt"
+	//"os"
 	"log"
 )
 
@@ -13,6 +13,7 @@ var (
 	user     = "fantasy123"
 	password = "falcons123"
 	database = "fantasyLeague"
+	sslca = "rds-combined-ca-bundle.pem"
 	// Db : Global Db vairable
 	Db *sql.DB
 )
@@ -21,9 +22,9 @@ var (
 func DbConnect() {
 	var err error
 
-	//connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-	//	server, user, password, port, database)
-	Db, err = sql.Open("sqlserver", os.Getenv("DATABASE_URL"))
+	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;sslca=%s",
+		server, user, password, port, database, sslca)
+	Db, err = sql.Open("sqlserver", connString)
 	if err != nil {
 		log.Fatal("Error creating connection pool: " + err.Error())
 	}
