@@ -8,6 +8,7 @@ import (
 	"db"
 	"routes"
 	"authorization"
+	"fmt"
 
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -19,6 +20,7 @@ func main() {
 	database.DbConnect()
 	defer database.Db.Close()
 	port := ":" + os.Getenv("PORT")
+	fmt.Println(port)
 	//port := ":8000"
 	//Init Router
 	r := mux.NewRouter()

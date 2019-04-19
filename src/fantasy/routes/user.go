@@ -34,6 +34,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	secQErr := tx.QueryRow("SELECT Question_Name FROM security_questions WHERE QID=@QID", sql.Named("QID", user.QID)).Scan(&questionName)
 	if secQErr != nil {
 		fmt.Println("Oops! something went wrong", secQErr.Error())
+		json.NewEncoder(w).Encode("true")
+		return
 	}
 
 	//Verifying if security answer exist for that question
@@ -61,11 +63,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 			log.Println("Rollback for create user")
 			tx.Rollback()
 			json.NewEncoder(w).Encode(err)
-			log.Fatal(err)
+			return
 		}
 		json.NewEncoder(w).Encode(true)
 	} else {
 		fmt.Println("Security answer is invalid", secQErr.Error())
+		json.NewEncoder(w).Encode(false)
 	}
 
 	tx.Commit()
@@ -79,16 +82,19 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	var password string
 	tx, _ := database.Db.Begin()
 	_ = json.NewDecoder(r.Body).Decode(&user)
-	err := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username)).Scan(&username, &password)
-	var isValid = hashing.ComparePasswords(password, []byte(user.Password))
+	row := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username))
+	err := row.Scan(&username, &password)
 	if err != nil {
-		log.Println("Rollback for create user")
+		log.Println("Rollback for verify user")
 		tx.Rollback()
+		fmt.Errorf(err.Error())
 		json.NewEncoder(w).Encode(err)
-		log.Fatal(err)
+		tx.Commit()
+		return
 	}
-
 	tx.Commit()
+	var isValid = hashing.ComparePasswords(password, []byte(user.Password))
+
 	if !isValid {
 		json.NewEncoder(w).Encode(isValid)
 	} else {
@@ -96,7 +102,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("Error generating token")
 			json.NewEncoder(w).Encode("Error generating token")
-			log.Fatal("Error generating token")
+			fmt.Errorf("Error generating token")
 		}
 		fmt.Println(tokenString)
 		json.NewEncoder(w).Encode(tokenString)
@@ -116,12 +122,14 @@ func GetAnswers(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params["id"])
 	if err != nil {
 		json.NewEncoder(w).Encode(err.Error())
-		log.Fatal("Error in converting string to int")
+		fmt.Errorf("Error in converting string to int")
+		return
 	}
 	rows, qerr := database.Db.Query("SELECT AID, Answer FROM security_answers WHERE QID=@QID", sql.Named("QID", id))
 	if qerr != nil {
 		json.NewEncoder(w).Encode(qerr.Error())
-		log.Fatal("Error in query")
+		fmt.Errorf("Error in query")
+		return
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -132,7 +140,7 @@ func GetAnswers(w http.ResponseWriter, r *http.Request) {
 		scanerr := rows.Scan(&aid, &ans)
 		if scanerr != nil {
 			json.NewEncoder(w).Encode(scanerr.Error())
-			log.Fatal("Error in scanning answer query")
+			fmt.Errorf("Error in scanning answer query")
 		}
 		resultAnswer := model.Answer{AID: aid, Answer: ans}
 		fmt.Println(resultAnswer)
