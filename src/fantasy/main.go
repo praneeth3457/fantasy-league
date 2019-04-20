@@ -29,6 +29,7 @@ func main() {
 	r.HandleFunc("/api/user/create", routes.CreateUser).Methods("POST")
 	r.HandleFunc("/api/user/verify", routes.VerifyUser).Methods("POST")
 	r.HandleFunc("/api/user/getAnswers/{id}", routes.GetAnswers).Methods("GET")
+	r.HandleFunc("/api/user/getQuestions", routes.GetQuestions).Methods("GET")
 	//Match routes
 	r.Handle("/api/match/create", authorization.IsAuthorized(routes.CreateMatch, constant.UserAdmin)).Methods("POST")
 

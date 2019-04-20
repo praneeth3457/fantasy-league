@@ -148,3 +148,31 @@ func GetAnswers(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(answers)
 }
+
+//GetQuestions :
+func GetQuestions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var questions []model.Question
+	rows, qerr := database.Db.Query("SELECT * FROM security_questions")
+	if qerr != nil {
+		json.NewEncoder(w).Encode(qerr.Error())
+		fmt.Errorf("Error in query")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			qid int
+			ques string
+		)
+		scanerr := rows.Scan(&qid, &ques)
+		if scanerr != nil {
+			json.NewEncoder(w).Encode(scanerr.Error())
+			fmt.Errorf("Error in scanning answer query")
+		}
+		resultQuestion := model.Question{QID: qid, QuestionName: ques}
+		fmt.Println(resultQuestion)
+		questions = append(questions, resultQuestion)
+	}
+	json.NewEncoder(w).Encode(questions)
+}

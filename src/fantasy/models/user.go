@@ -17,3 +17,9 @@ type Answer struct {
 	Answer string `json:"answer"`
 	QID    int    `json:"qid"`
 }
+
+// Question :
+type Question struct {
+	QID    int    `json:"qid"`
+	QuestionName string `json:"questionName"`
+}
