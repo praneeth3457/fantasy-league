@@ -24,7 +24,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		passwrd        string
 		questionName   string
 		questionAnswer int
-		isQAnsExist    = false
+		username string
+		responseObj model.Response
 	)
 	_ = json.NewDecoder(r.Body).Decode(&user)
 	tx, _ := database.Db.Begin()
@@ -33,42 +34,42 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	//Verifying if security question exist
 	secQErr := tx.QueryRow("SELECT Question_Name FROM security_questions WHERE QID=@QID", sql.Named("QID", user.QID)).Scan(&questionName)
 	if secQErr != nil {
-		fmt.Println("Oops! something went wrong", secQErr.Error())
-		json.NewEncoder(w).Encode("true")
+		fmt.Println("Invalid security question.", secQErr.Error())
+		responseObj = model.Response{Success: false, Message: "Invalid security question."}
+		json.NewEncoder(w).Encode(responseObj)
 		return
 	}
 
 	//Verifying if security answer exist for that question
-	ansids, secAErr := tx.Query("SELECT AID FROM security_answers WHERE QID=@QID", sql.Named("QID", user.QID))
+	secAErr := tx.QueryRow("SELECT AID FROM security_answers WHERE QID=@QID AND AID=@AID", sql.Named("QID", user.QID), sql.Named("AID", user.AID)).Scan(&questionAnswer)
 	if secAErr != nil {
-		fmt.Println("Oops! something went wrong", secQErr.Error())
-	}
-	defer ansids.Close()
-	for ansids.Next() {
-		err := ansids.Scan(&questionAnswer)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if questionAnswer == user.AID {
-			isQAnsExist = true
-			break
-		}
+		fmt.Println("Invalid security answer.", secAErr.Error())
+		responseObj = model.Response{Success: false, Message: "Invalid security answer."}
+		json.NewEncoder(w).Encode(responseObj)
+		return
 	}
 
+	//Verifying if username already exist
+	usernameDoesntExist := tx.QueryRow("SELECT Username FROM users WHERE Username=@Username", sql.Named("Username", user.Username)).Scan(&username)
+
 	//If everything good, then create a new user. Else throw error.
-	if isQAnsExist {
+	if usernameDoesntExist != nil {
 		stmt, err := tx.Prepare("INSERT INTO users(Name,Username,Password,QID,AID) VALUES(@Name, @Username, @Password, @QID, @AID)")
 		_, err = stmt.Exec(sql.Named("Name", user.Name), sql.Named("Username", user.Username), sql.Named("Password", passwrd), sql.Named("QID", user.QID), sql.Named("AID", user.AID))
 		if err != nil {
 			log.Println("Rollback for create user")
+			fmt.Println("Unable to create user", err.Error())
 			tx.Rollback()
-			json.NewEncoder(w).Encode(err)
+			responseObj = model.Response{Success: false, Message: "Error in creating user. Please try again with different username."}
+			json.NewEncoder(w).Encode(responseObj)
 			return
 		}
-		json.NewEncoder(w).Encode(true)
+		responseObj = model.Response{Success: true, Message: "Registered successfully."}
+		json.NewEncoder(w).Encode(responseObj)
 	} else {
-		fmt.Println("Security answer is invalid", secQErr.Error())
-		json.NewEncoder(w).Encode(false)
+		fmt.Println("Username exist")
+		responseObj = model.Response{Success: false, Message: "Username exist. Please try another username."}
+		json.NewEncoder(w).Encode(responseObj)
 	}
 
 	tx.Commit()
@@ -80,6 +81,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	var username string
 	var password string
+	var responseObj model.Response
 	tx, _ := database.Db.Begin()
 	_ = json.NewDecoder(r.Body).Decode(&user)
 	row := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username))
@@ -87,25 +89,24 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Rollback for verify user")
 		tx.Rollback()
-		fmt.Errorf(err.Error())
-		json.NewEncoder(w).Encode(err)
-		tx.Commit()
+		responseObj = model.Response{Success: false, Message: "Invalid username/password."}
+		json.NewEncoder(w).Encode(responseObj)
 		return
 	}
 	tx.Commit()
 	var isValid = hashing.ComparePasswords(password, []byte(user.Password))
 
 	if !isValid {
-		json.NewEncoder(w).Encode(isValid)
+		responseObj = model.Response{Success: false, Message: "Invalid username/password."}
+		json.NewEncoder(w).Encode(responseObj)
 	} else {
 		tokenString, err := authorization.GenerateJWT(user.Username)
 		if err != nil {
-			fmt.Println("Error generating token")
-			json.NewEncoder(w).Encode("Error generating token")
-			fmt.Errorf("Error generating token")
+			responseObj = model.Response{Success: false, Message: "Error generating token."}
+			json.NewEncoder(w).Encode(responseObj)
 		}
-		fmt.Println(tokenString)
-		json.NewEncoder(w).Encode(tokenString)
+		responseObj = model.Response{Success: true, Message: tokenString}
+		json.NewEncoder(w).Encode(responseObj)
 	}
 
 }
