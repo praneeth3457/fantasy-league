@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"fmt"
 
 	"db"
 	model "models"
@@ -27,4 +28,42 @@ func CreateMatch(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit()
 	json.NewEncoder(w).Encode(true)
+}
+
+//GetAllMatches :
+func GetAllMatches(w http.ResponseWriter, r *http.Request) {
+	var (
+		matches 	[]model.Match
+		response	model.Response 
+	)
+	rows, err := database.Db.Query("SELECT * FROM matchesTbl")
+	if err != nil {
+		fmt.Errorf("Error in getAllMatches results")
+		response = model.Response{Success: false, Message: "Unable to fetch matches list."}
+		json.NewEncoder(w).Encode(response)
+		defer rows.Close()
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			mid int
+			team string
+			opposition string
+			matchDate string
+			result *int
+			isCompleted int
+			status int
+		)
+		scanerr := rows.Scan(&mid, &team, &opposition, &matchDate, &result, &isCompleted, &status)
+		if scanerr != nil {
+			fmt.Errorf("Error in scanning answer query")
+			response = model.Response{Success: false, Message: scanerr.Error()}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+		resultMatch := model.Match{MID: mid, Team: team, Opposition: opposition, MatchDate: matchDate, Result: result, IsCompleted: isCompleted, Status: status}
+		matches = append(matches, resultMatch)
+	}
+	json.NewEncoder(w).Encode(matches)
 }

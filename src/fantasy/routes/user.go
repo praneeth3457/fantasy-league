@@ -114,10 +114,6 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 //GetAnswers :
 func GetAnswers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	// type answer struct {
-	// 	qid int
-	// 	ans string
-	// }
 	var answers []model.Answer
 	params := mux.Vars(r)
 	id, err := strconv.Atoi(params["id"])

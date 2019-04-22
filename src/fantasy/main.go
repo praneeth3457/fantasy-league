@@ -33,6 +33,7 @@ func main() {
 	r.HandleFunc("/api/user/getQuestions", routes.GetQuestions).Methods("GET")
 	//Match routes
 	r.Handle("/api/match/create", authorization.IsAuthorized(routes.CreateMatch, constant.UserAdmin)).Methods("POST")
+	r.Handle("/api/match/getAllMatches", authorization.IsAuthorized(routes.GetAllMatches, constant.UserAny)).Methods("GET")
 
 	// Solves Cross Origin Access Issue
 	c := cors.New(cors.Options{

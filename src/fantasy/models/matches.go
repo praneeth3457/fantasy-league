@@ -6,6 +6,7 @@ type Match struct {
 	Team        string `json:"team"`
 	Opposition  string `json:"opposition"`
 	MatchDate   string `json:"matchDate"`
-	Result      int    `json:"result"`
+	Result      *int    `json:"result"`
 	IsCompleted int    `json:"isCompleted"`
+	Status 		int	   `json:"status"`
 }
