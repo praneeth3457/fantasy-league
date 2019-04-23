@@ -34,6 +34,8 @@ func main() {
 	//Match routes
 	r.Handle("/api/match/create", authorization.IsAuthorized(routes.CreateMatch, constant.UserAdmin)).Methods("POST")
 	r.Handle("/api/match/getAllMatches", authorization.IsAuthorized(routes.GetAllMatches, constant.UserAny)).Methods("GET")
+	//usersPlayers routes
+	r.Handle("/api/usersPlayers/createAvailability", authorization.IsAuthorized(routes.CreateAvailability, constant.UserAuthor)).Methods("GET")
 
 	// Solves Cross Origin Access Issue
 	c := cors.New(cors.Options{

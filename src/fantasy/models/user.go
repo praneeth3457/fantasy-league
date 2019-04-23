@@ -2,13 +2,14 @@ package model
 
 // User :
 type User struct {
-	UID      int
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	AID      int    `json:"aid"`
-	QID      int    `json:"qid"`
-	Role     int    `json:"role"`
+	UID      	int	   `json:"uid"`
+	Name     	string `json:"name"`
+	Username 	string `json:"username"`
+	Password 	string `json:"password"`
+	AID      	int    `json:"aid"`
+	QID      	int    `json:"qid"`
+	Role     	int    `json:"role"`
+	isStarted 	int    `json:"isStarted"`
 }
 
 // Answer :

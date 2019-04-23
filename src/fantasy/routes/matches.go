@@ -13,7 +13,6 @@ import (
 
 //CreateMatch :
 func CreateMatch(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	var match model.Match
 	_ = json.NewDecoder(r.Body).Decode(&match)
 
@@ -24,7 +23,6 @@ func CreateMatch(w http.ResponseWriter, r *http.Request) {
 		log.Println("Rollback for create match")
 		tx.Rollback()
 		json.NewEncoder(w).Encode(err)
-		log.Fatal(err)
 	}
 	tx.Commit()
 	json.NewEncoder(w).Encode(true)
