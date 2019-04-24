@@ -64,6 +64,5 @@ func GetAllMatches(w http.ResponseWriter, r *http.Request) {
 		resultMatch := model.Match{MID: mid, Team: team, Opposition: opposition, MatchDate: matchDate, Result: result, IsCompleted: isCompleted, Status: status}
 		matches = append(matches, resultMatch)
 	}
-	response = model.Response{Success: true, Message: matches}
 	json.NewEncoder(w).Encode(matches)
 }
