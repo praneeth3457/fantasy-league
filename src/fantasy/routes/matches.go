@@ -13,6 +13,7 @@ import (
 
 //CreateMatch :
 func CreateMatch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var match model.Match
 	_ = json.NewDecoder(r.Body).Decode(&match)
 

@@ -26,6 +26,13 @@ func main() {
 	//Init Router
 	r := mux.NewRouter()
 
+	// Solves Cross Origin Access Issue
+	c := cors.New(cors.Options{
+		AllowedHeaders: []string{"Content-Type","Token","User-Context"},
+		AllowedOrigins: []string{"http://localhost:4200","https://falcons-fantasy.herokuapp.com"},
+	})
+	handler := c.Handler(r)
+
 	//User routes
 	r.HandleFunc("/api/user/create", routes.CreateUser).Methods("POST")
 	r.HandleFunc("/api/user/verify", routes.VerifyUser).Methods("POST")
@@ -36,12 +43,6 @@ func main() {
 	r.Handle("/api/match/getAllMatches", authorization.IsAuthorized(routes.GetAllMatches, constant.UserAny)).Methods("GET")
 	//usersPlayers routes
 	r.Handle("/api/usersPlayers/createAvailability", authorization.IsAuthorized(routes.CreateAvailability, constant.UserAuthor)).Methods("GET")
-
-	// Solves Cross Origin Access Issue
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:4200","https://falcons-fantasy.herokuapp.com"},
-	})
-	handler := c.Handler(r)
 
 	srv := &http.Server{
 		Handler: handler,
