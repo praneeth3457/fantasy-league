@@ -81,11 +81,12 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	var username string
 	var password string
+	var uid int
 	var responseObj model.Response
 	tx, _ := database.Db.Begin()
 	_ = json.NewDecoder(r.Body).Decode(&user)
-	row := tx.QueryRow("SELECT Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username))
-	err := row.Scan(&username, &password)
+	row := tx.QueryRow("SELECT UID, Username,Password FROM users WHERE Username=@Username", sql.Named("Username", user.Username))
+	err := row.Scan(&uid, &username, &password)
 	if err != nil {
 		log.Println("Rollback for verify user")
 		tx.Rollback()
@@ -105,8 +106,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 			responseObj = model.Response{Success: false, Message: "Error generating token."}
 			json.NewEncoder(w).Encode(responseObj)
 		}
-		responseObj = model.Response{Success: true, Message: tokenString}
-		json.NewEncoder(w).Encode(responseObj)
+		json.NewEncoder(w).Encode(model.Response2{Success: true, Token: tokenString, UID: uid, Username: username})
 	}
 
 }
