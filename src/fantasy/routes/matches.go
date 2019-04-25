@@ -66,3 +66,59 @@ func GetAllMatches(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(matches)
 }
+
+//GetAllMatches :
+func OtherMatchDetails(w http.ResponseWriter, r *http.Request) {
+	var (
+		other model.Other
+		otherNew model.Other
+		otherDetail model.OtherDetail
+		response	model.Response 
+	)
+	_ = json.NewDecoder(r.Body).Decode(&other)
+
+	row := database.Db.QueryRow("SELECT * FROM othersTbl WHERE UID=@UID AND MID=@MID", sql.Named("UID", other.UID), sql.Named("MID", other.MID))
+	err := row.Scan(&otherNew.OID, &otherNew.Captain, &otherNew.MVBA, &otherNew.MVBO, &otherNew.MVAR, &otherNew.UID, &otherNew.MID)
+	if err != nil {
+		response = model.Response{Success: false, Message: "no rows in result set"}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	players, playersErr := database.Db.Query("SELECT * FROM playersTbl WHERE PID IN (@Captain, @MVBA, @MVBO, @MVAR)", 
+						sql.Named("Captain", otherNew.Captain), sql.Named("MVBA", otherNew.MVBA), sql.Named("MVBO", otherNew.MVBO), sql.Named("MVAR", otherNew.MVAR))
+	if playersErr != nil {
+		response = model.Response{Success: false, Message: playersErr.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	defer players.Close()
+	for players.Next() {
+		var (
+			pid		int
+			name	string
+			role	string
+			team	string
+		)
+		scanerr := players.Scan(&pid, &name, &role, &team)
+		if scanerr != nil {
+			json.NewEncoder(w).Encode(scanerr.Error())
+			fmt.Errorf("Error in scanning answer query")
+		}
+		if pid == otherNew.Captain {
+			otherDetail.Captain = model.Player{PID: pid, Name: name, Role: role, Team: team}
+		} else if pid == otherNew.MVBA {
+			otherDetail.MVBA = model.Player{PID: pid, Name: name, Role: role, Team: team}
+		} else if pid == otherNew.MVBO {
+			otherDetail.MVBO = model.Player{PID: pid, Name: name, Role: role, Team: team}
+		} else if pid == otherNew.MVAR {
+			otherDetail.MVAR = model.Player{PID: pid, Name: name, Role: role, Team: team}
+		}
+	}
+	otherDetail.OID = otherNew.OID
+	otherDetail.UID = otherNew.UID
+	otherDetail.MID = otherNew.MID
+	json.NewEncoder(w).Encode(otherDetail)
+
+}
