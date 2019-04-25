@@ -44,6 +44,7 @@ func main() {
 	r.Handle("/api/match/otherMatchDetails", authorization.IsAuthorized(routes.OtherMatchDetails, constant.UserAny)).Methods("POST")
 	//usersPlayers routes
 	r.Handle("/api/usersPlayers/createAvailability", authorization.IsAuthorized(routes.CreateAvailability, constant.UserAuthor)).Methods("GET")
+	r.Handle("/api/usersPlayers/getAvailability", authorization.IsAuthorized(routes.GetAvailability, constant.UserAny)).Methods("POST")
 
 	srv := &http.Server{
 		Handler: handler,

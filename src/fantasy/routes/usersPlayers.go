@@ -103,3 +103,76 @@ func ReplaceSQL(old, searchPattern string) string {
 	}
 	return old
 }
+
+func GetAvailability(w http.ResponseWriter, r *http.Request) {
+	var (
+		user model.User
+		response model.Response
+		pids []int
+		availabilities []model.Availability
+	)
+	_ = json.NewDecoder(r.Body).Decode(&user)
+	rows, err := database.Db.Query("SELECT * FROM availabilityTbl WHERE UID=@UID", sql.Named("UID", user.UID))
+	if err != nil {
+		response = model.Response{Success: false, Message: "no rows in result set"}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			pid			int
+			aid			int
+			uid			int
+			available	int
+		)
+		scanerr := rows.Scan(&aid, &uid, &pid, &available)
+		if scanerr != nil {
+			response = model.Response{Success: false, Message: "no rows-2 in result set"}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		pids = append(pids, pid)
+		availabilities = append(availabilities, model.Availability{AID: aid, UID: uid, PID: pid, Name: "", Role: "", Team: "", Available: available})
+	}
+	params2 := make([]string, 0, len(pids))
+	for i := range pids {
+		params2 = append(params2, strconv.Itoa(pids[i]))
+	}
+
+	var some interface{} = strings.Join(params2, ", ")
+	q2 := fmt.Sprintf(`SELECT * FROM playersTbl WHERE PID IN (%s)`, some)
+	playerRows, playerserr := database.Db.Query(q2)
+	if playerserr != nil {
+		response = model.Response{Success: false, Message: playerserr.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	defer playerRows.Close()
+	for playerRows.Next() {
+		
+		var (
+			player model.Player
+		)
+		scanerr2 := playerRows.Scan(&player.PID, &player.Name, &player.Role, &player.Team)
+		if scanerr2 != nil {
+			response = model.Response{Success: false, Message: "no rows-3 in result set"}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		for i := range availabilities {
+			if availabilities[i].PID == player.PID {
+				availabilities[i].Name = player.Name
+				availabilities[i].Role = player.Role
+				availabilities[i].Team = player.Team
+				break
+			}
+		}
+	}
+
+	json.NewEncoder(w).Encode(model.AvailabilityResponse{Success: true, Message: availabilities})
+}
+
