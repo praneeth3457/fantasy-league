@@ -26,14 +26,12 @@ type Player struct {
 	Name	string `json:"name"`
 	Role	string `json:"role"`
 	Team	string `json:"team"`
+	Type	string `json:"type"`
 }
 
 type OtherDetail struct {
 	OID	int `json:"oid"`
-	Captain	Player `json:"captain"`
-	MVBA	Player `json:"mvba"`
-	MVBO	Player `json:"mvbo"`
-	MVAR	Player `json:"mvar"`
+	Players []Player `json:"players"`
 	UID	int `json:"uid"`
 	MID	int `json:"mid"`
 }

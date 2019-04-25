@@ -100,6 +100,7 @@ func OtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 			name	string
 			role	string
 			team	string
+			player model.Player
 		)
 		scanerr := players.Scan(&pid, &name, &role, &team)
 		if scanerr != nil {
@@ -107,14 +108,16 @@ func OtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("Error in scanning answer query")
 		}
 		if pid == otherNew.Captain {
-			otherDetail.Captain = model.Player{PID: pid, Name: name, Role: role, Team: team}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "Captain"}
 		} else if pid == otherNew.MVBA {
-			otherDetail.MVBA = model.Player{PID: pid, Name: name, Role: role, Team: team}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVBA"}
 		} else if pid == otherNew.MVBO {
-			otherDetail.MVBO = model.Player{PID: pid, Name: name, Role: role, Team: team}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVBO"}
 		} else if pid == otherNew.MVAR {
-			otherDetail.MVAR = model.Player{PID: pid, Name: name, Role: role, Team: team}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVAR"}
 		}
+
+		otherDetail.Players = append(otherDetail.Players, player)
 	}
 	otherDetail.OID = otherNew.OID
 	otherDetail.UID = otherNew.UID
