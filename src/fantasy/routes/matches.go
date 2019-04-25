@@ -108,13 +108,13 @@ func OtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 			fmt.Errorf("Error in scanning answer query")
 		}
 		if pid == otherNew.Captain {
-			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "Captain"}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "CAPTAIN"}
 		} else if pid == otherNew.MVBA {
-			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVBA"}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MV BATSMAN"}
 		} else if pid == otherNew.MVBO {
-			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVBO"}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MV BOWLER"}
 		} else if pid == otherNew.MVAR {
-			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MVAR"}
+			player = model.Player{PID: pid, Name: name, Role: role, Team: team, Type: "MV FIELDER"}
 		}
 
 		otherDetail.Players = append(otherDetail.Players, player)
