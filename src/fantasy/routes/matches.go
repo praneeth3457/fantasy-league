@@ -119,6 +119,7 @@ func OtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 	otherDetail.OID = otherNew.OID
 	otherDetail.UID = otherNew.UID
 	otherDetail.MID = otherNew.MID
-	json.NewEncoder(w).Encode(otherDetail)
+	
+	json.NewEncoder(w).Encode(model.Response3{Success: true, Message: otherDetail})
 
 }
