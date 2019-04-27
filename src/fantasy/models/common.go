@@ -11,6 +11,8 @@ type Response2 struct {
 	Token string `json:"token"`
 	UID int `json:"uid"`
 	Username string `json:"username"`
+	Role int `json:"role"`
+	IsStarted int `json:"isStarted"`
 }
 
 type Response3 struct {

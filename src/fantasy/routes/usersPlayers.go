@@ -61,24 +61,7 @@ func CreateAvailability(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(responseObj)
 			return
 		}
-		//sqlStr += "(?, ?),"
-		//availabilities = append(availabilities, uid, pid)
 	}
-	//trim the last ,
-	//sqlStr = strings.TrimSuffix(sqlStr, ",")
-	//Replacing ? with $n for postgres
-	//sqlStr = ReplaceSQL(sqlStr, "?")
-	//stmt, aErr := tx.Prepare(sqlStr)
-	//_, aErr = stmt.Exec(availabilities...)
-	//_, aErr = stmt.Exec(10001, 40000001)
-	// if aErr != nil {
-	// 	log.Println("Rollback for inserting availability rows")
-	// 	tx.Rollback()
-	// 	responseObj = model.Response{Success: false, Message: aErr.Error()}
-	// 	json.NewEncoder(w).Encode(responseObj)
-	// 	return
-	// }
-	//sql.Named("Team", match.Team), sql.Named("Team", match.Team)
 
 	stmt, aErr = tx.Prepare("UPDATE users SET isStarted = @isStarted Where Username=@Username")
 	_, aErr = stmt.Exec(sql.Named("isStarted", 1), sql.Named("Username", r.Header["User-Context"][0]))
