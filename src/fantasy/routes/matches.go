@@ -196,6 +196,10 @@ func SaveOtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
+		tx.Commit()
+		response = model.Response{Success: true, Message: "Successfully saved."}
+		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	//Also update the players availability by adding the removed player
