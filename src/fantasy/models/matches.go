@@ -35,3 +35,4 @@ type OtherDetail struct {
 	UID	int `json:"uid"`
 	MID	int `json:"mid"`
 }
+
