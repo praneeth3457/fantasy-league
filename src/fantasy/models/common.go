@@ -19,3 +19,8 @@ type Response3 struct {
 	Success bool `json:"success"`
 	Message OtherDetail `json:"message"`
 }
+
+type ResponsePlayers struct {
+	Success bool `json:"success"`
+	Message []Player `json:"message"`
+}

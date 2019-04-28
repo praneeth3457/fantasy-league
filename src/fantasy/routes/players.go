@@ -14,6 +14,7 @@ func GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	var (
 		players 	[]model.Player
 		response model.Response
+		response2 model.ResponsePlayers
 	)
 	rows, err := database.Db.Query("SELECT * FROM playersTbl")
 	if err != nil {
@@ -38,5 +39,6 @@ func GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 		resultMatch := model.Player{PID: player.PID, Name: player.Name, Role: player.Role, Team: player.Team}
 		players = append(players, resultMatch)
 	}
-	json.NewEncoder(w).Encode(players)
+	response2 = model.ResponsePlayers{Success: true, Message: players}
+	json.NewEncoder(w).Encode(response2)
 }
