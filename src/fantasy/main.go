@@ -29,7 +29,7 @@ func main() {
 	// Solves Cross Origin Access Issue
 	c := cors.New(cors.Options{
 		AllowedHeaders: []string{"Content-Type","Token","User-Context"},
-		AllowedOrigins: []string{"http://localhost:4200","https://falcons-fantasy.herokuapp.com"},
+		AllowedOrigins: []string{"http://localhost:4200","https://falcons-fantasy.herokuapp.com","http://falcons-fantasy.herokuapp.com"},
 	})
 	handler := c.Handler(r)
 
