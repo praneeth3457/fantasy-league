@@ -126,7 +126,7 @@ func GetAvailability(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var some interface{} = strings.Join(params2, ", ")
-	q2 := fmt.Sprintf(`SELECT * FROM playersTbl WHERE PID IN (%s)`, some)
+	q2 := fmt.Sprintf(`SELECT * FROM playersTbl WHERE PID IN (%s) ORDER BY Name`, some)
 	playerRows, playerserr := database.Db.Query(q2)
 	if playerserr != nil {
 		response = model.Response{Success: false, Message: playerserr.Error()}

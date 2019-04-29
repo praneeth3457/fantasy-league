@@ -17,7 +17,7 @@ func GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 		response model.Response
 		response2 model.ResponsePlayers
 	)
-	rows, err := database.Db.Query("SELECT * FROM playersTbl")
+	rows, err := database.Db.Query("SELECT * FROM playersTbl ORDER BY Name")
 	if err != nil {
 		fmt.Errorf("Error in getAllMatches results")
 		response = model.Response{Success: false, Message: "Unable to fetch matches list."}
