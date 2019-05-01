@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"fmt"
 	"strconv"
+	"sort"
 
 	"db"
 	model "models"
@@ -242,4 +243,144 @@ func SaveOtherMatchDetails(w http.ResponseWriter, r *http.Request) {
 	tx.Commit()
 	response = model.Response{Success: true, Message: "Successfully saved."}
 	json.NewEncoder(w).Encode(response)
+}
+
+
+/*
+*/
+func GetAllMatchPoints(w http.ResponseWriter, r *http.Request) {
+	var (
+		id model.ID
+	)
+	_ = json.NewDecoder(r.Body).Decode(&id)
+	
+	response := getUserPoints(id)
+	json.NewEncoder(w).Encode(response)
+}
+
+/*
+*/
+func GetAllUserMatchPoints(w http.ResponseWriter, r *http.Request) {
+	var (
+		allUserPoints model.ResponseAllUserMatchPoints
+		res model.ResponseAllUserMatchPoints
+	)
+
+	rows, err := database.Db.Query("SELECT UID, Name, Username FROM users WHERE isStarted = 1")
+	if err != nil {
+		res = model.ResponseAllUserMatchPoints{Success: false, Message: "No users found"}
+		json.NewEncoder(w).Encode(res)
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			user model.User
+			userMatchPoint model.UserMatchPoint
+			id model.ID
+		)
+		scanerr2 := rows.Scan(&user.UID, &user.Name, &user.Username)
+		if scanerr2 != nil {
+			res = model.ResponseAllUserMatchPoints{Success: false, Message: "Unable to scan user rows"}
+			json.NewEncoder(w).Encode(res)
+		}
+		
+		id.UID = user.UID
+		response := getUserPoints(id)
+
+		userMatchPoint.UID = user.UID
+		userMatchPoint.Name = user.Name
+		userMatchPoint.Username = user.Username
+		userMatchPoint.AllMatchPoints = response.AllMatchPoints
+		userMatchPoint.TotalPoints = response.TotalPoints
+
+		allUserPoints.Points = append(allUserPoints.Points, userMatchPoint)
+	}
+
+	sort.Slice(allUserPoints.Points, func(i, j int) bool {
+		return allUserPoints.Points[i].TotalPoints.Total_pts > allUserPoints.Points[j].TotalPoints.Total_pts
+	})
+	
+	allUserPoints.Success = true
+	json.NewEncoder(w).Encode(allUserPoints)
+
+}
+
+
+func getUserPoints (id model.ID) model.ResponseAllMatchPoints {
+	var (
+		allPoints []model.GetPoints
+		totalPoints model.TotalPoints
+	)
+	rows, err := database.Db.Query("SELECT ot.* FROM [othersTbl] ot JOIN [matchesTbl] mt ON ot.MID = mt.MID WHERE mt.IsCompleted = 1 AND ot.UID = @UID", sql.Named("UID", id.UID))
+	if err != nil {
+		return model.ResponseAllMatchPoints{Success: false, Message: "No matches found"}
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			other model.Other
+			pointsObj model.GetPoints
+		)
+		scanerr := rows.Scan(&other.OID, &other.Captain, &other.MVBA, &other.MVBO, &other.MVAR, &other.UID, &other.MID)
+		if scanerr != nil {
+			return model.ResponseAllMatchPoints{Success: false, Message: "Error in scanning other table IDs"}
+		}
+		pointsObj.MID = other.MID
+
+		pointsRows, err2 := database.Db.Query("SELECT * FROM pointsTbl WHERE PID IN (@Captain, @MVBA, @MVBO, @MVAR) AND MID = @MID", sql.Named("Captain", other.Captain), sql.Named("MVBA", other.MVBA), sql.Named("MVBO", other.MVBO), sql.Named("MVAR", other.MVAR), sql.Named("MID", other.MID))
+		if err2 != nil {
+			return model.ResponseAllMatchPoints{Success: false, Message: "No points found for the match"}
+		}
+
+		defer pointsRows.Close()
+		for pointsRows.Next() {
+			var (
+				points model.Points2
+			)
+			scanerr2 := pointsRows.Scan(&points.PTID, &points.Batting_pts, &points.Bowling_pts, &points.Fielding_pts, &points.Other_pts, &points.Total_pts, &points.MID, &points.PID)
+			if scanerr2 != nil {
+				return model.ResponseAllMatchPoints{Success: false, Message: "Unable to scan pointsRows"}
+			}
+
+			if other.Captain == points.PID {
+				pointsObj.Points = append(pointsObj.Points, model.Points2{Role: "CAPTAIN", PTID: points.PTID, Batting_pts: (2 * points.Batting_pts), Bowling_pts: (2 * points.Bowling_pts), Fielding_pts: (2 * points.Fielding_pts), Other_pts: (2 * points.Other_pts), Total_pts: (2 * points.Total_pts), MID: points.MID, PID: points.PID})
+				pointsObj.TotalPoints.Batting_pts += (2 * points.Batting_pts)
+				pointsObj.TotalPoints.Bowling_pts += (2 * points.Bowling_pts)
+				pointsObj.TotalPoints.Fielding_pts += (2 * points.Fielding_pts)
+				pointsObj.TotalPoints.Total_pts += (2 * points.Total_pts)
+			} else if other.MVBA == points.PID {
+				pointsObj.Points = append(pointsObj.Points, model.Points2{Role: "MV BATSMAN", PTID: points.PTID, Batting_pts: (2 * points.Batting_pts), Bowling_pts: points.Bowling_pts, Fielding_pts: points.Fielding_pts, Other_pts: points.Other_pts, Total_pts: (points.Total_pts + points.Batting_pts), MID: points.MID, PID: points.PID})
+				pointsObj.TotalPoints.Batting_pts += (2 * points.Batting_pts)
+				pointsObj.TotalPoints.Bowling_pts += points.Bowling_pts
+				pointsObj.TotalPoints.Fielding_pts += points.Fielding_pts
+				pointsObj.TotalPoints.Total_pts += points.Total_pts + points.Batting_pts
+			} else if other.MVBO == points.PID {
+				pointsObj.Points = append(pointsObj.Points, model.Points2{Role: "MV BOWLER", PTID: points.PTID, Batting_pts: points.Batting_pts, Bowling_pts: (2 * points.Bowling_pts), Fielding_pts: points.Fielding_pts, Other_pts: points.Other_pts, Total_pts: (points.Total_pts + points.Bowling_pts), MID: points.MID, PID: points.PID})
+				pointsObj.TotalPoints.Batting_pts += points.Batting_pts
+				pointsObj.TotalPoints.Bowling_pts += (2 * points.Bowling_pts)
+				pointsObj.TotalPoints.Fielding_pts += points.Fielding_pts
+				pointsObj.TotalPoints.Total_pts += points.Total_pts + points.Bowling_pts
+			} else if other.MVAR == points.PID {
+				pointsObj.Points = append(pointsObj.Points, model.Points2{Role: "MV FIELDER", PTID: points.PTID, Batting_pts: points.Batting_pts, Bowling_pts: points.Bowling_pts, Fielding_pts: (2 * points.Fielding_pts), Other_pts: points.Other_pts, Total_pts: (points.Total_pts + points.Fielding_pts), MID: points.MID, PID: points.PID})
+				pointsObj.TotalPoints.Batting_pts += points.Batting_pts
+				pointsObj.TotalPoints.Bowling_pts += points.Bowling_pts
+				pointsObj.TotalPoints.Fielding_pts += (2 * points.Fielding_pts)
+				pointsObj.TotalPoints.Total_pts += points.Total_pts + points.Fielding_pts
+			} 
+
+		}
+
+		allPoints = append(allPoints, pointsObj)
+	}
+
+	for _, point := range allPoints {
+		totalPoints.Batting_pts += point.TotalPoints.Batting_pts
+		totalPoints.Bowling_pts += point.TotalPoints.Bowling_pts
+		totalPoints.Fielding_pts += point.TotalPoints.Fielding_pts
+		totalPoints.Total_pts += point.TotalPoints.Total_pts
+	}
+
+	return model.ResponseAllMatchPoints{Success: true, AllMatchPoints: allPoints, TotalPoints: totalPoints}
 }

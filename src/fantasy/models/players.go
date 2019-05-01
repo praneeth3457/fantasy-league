@@ -31,7 +31,7 @@ type Fielding struct {
 }
 
 type Points struct {
-	PTID int `json:"baid"`
+	PTID int `json:"ptid"`
 	Batting_pts int `json:"battingsPts"`
 	Bowling_pts int `json:"bowlingPts"`
 	Fielding_pts int `json:"fieldingPts"`
