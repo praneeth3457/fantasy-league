@@ -56,6 +56,8 @@ type TotalPoints struct {
 
 type GetPoints struct {
 	MID int `json:"mid"`
+	Opposition string `json:"opposition"`
+	MatchDate string `json:"matchDate"`
 	Points []Points2 `json:"points"`
 	TotalPoints TotalPoints `json:"totalPoints"`
 }

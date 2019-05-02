@@ -312,7 +312,7 @@ func getUserPoints (id model.ID) model.ResponseAllMatchPoints {
 		allPoints []model.GetPoints
 		totalPoints model.TotalPoints
 	)
-	rows, err := database.Db.Query("SELECT ot.* FROM [othersTbl] ot JOIN [matchesTbl] mt ON ot.MID = mt.MID WHERE mt.IsCompleted = 1 AND ot.UID = @UID", sql.Named("UID", id.UID))
+	rows, err := database.Db.Query("SELECT ot.*, mt.Opposition, mt.Match_Date FROM [othersTbl] ot JOIN [matchesTbl] mt ON ot.MID = mt.MID WHERE mt.IsCompleted = 1 AND ot.UID = @UID", sql.Named("UID", id.UID))
 	if err != nil {
 		return model.ResponseAllMatchPoints{Success: false, Message: "No matches found"}
 	}
@@ -322,8 +322,10 @@ func getUserPoints (id model.ID) model.ResponseAllMatchPoints {
 		var (
 			other model.Other
 			pointsObj model.GetPoints
+			opposition string
+			matchDate string
 		)
-		scanerr := rows.Scan(&other.OID, &other.Captain, &other.MVBA, &other.MVBO, &other.MVAR, &other.UID, &other.MID)
+		scanerr := rows.Scan(&other.OID, &other.Captain, &other.MVBA, &other.MVBO, &other.MVAR, &other.UID, &other.MID, &opposition, &matchDate)
 		if scanerr != nil {
 			return model.ResponseAllMatchPoints{Success: false, Message: "Error in scanning other table IDs"}
 		}
@@ -344,6 +346,8 @@ func getUserPoints (id model.ID) model.ResponseAllMatchPoints {
 				return model.ResponseAllMatchPoints{Success: false, Message: "Unable to scan pointsRows"}
 			}
 
+			pointsObj.Opposition = opposition
+			pointsObj.MatchDate = matchDate
 			if other.Captain == points.PID {
 				pointsObj.Points = append(pointsObj.Points, model.Points2{Role: "CAPTAIN", PTID: points.PTID, Batting_pts: (2 * points.Batting_pts), Bowling_pts: (2 * points.Bowling_pts), Fielding_pts: (2 * points.Fielding_pts), Other_pts: (2 * points.Other_pts), Total_pts: (2 * points.Total_pts), MID: points.MID, PID: points.PID})
 				pointsObj.TotalPoints.Batting_pts += (2 * points.Batting_pts)
