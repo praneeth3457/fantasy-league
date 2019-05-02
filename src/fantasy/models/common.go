@@ -42,6 +42,6 @@ type UserMatchPoint struct {
 type ResponseAllUserMatchPoints struct {
 	Success bool `json:"success"`
 	Message string `json:"message"`
-	Points []UserMatchPoint
+	Points []UserMatchPoint `json:"points"`
 }
 
