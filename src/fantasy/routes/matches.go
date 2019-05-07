@@ -388,3 +388,32 @@ func getUserPoints (id model.ID) model.ResponseAllMatchPoints {
 
 	return model.ResponseAllMatchPoints{Success: true, AllMatchPoints: allPoints, TotalPoints: totalPoints}
 }
+
+
+func ChangeMatchStatus(w http.ResponseWriter, r *http.Request) {
+	var (
+		matchStatus model.MatchStatus
+		queryString string
+	)
+	_ = json.NewDecoder(r.Body).Decode(&matchStatus)
+
+	switch caseId := matchStatus.ID; caseId {
+	case 1:
+		queryString = "Status = @Value"
+	case 2:
+		queryString = "Result = @Value"
+	case 3:
+		queryString = "IsCompleted = @Value"
+	}
+
+	tx, _ := database.Db.Begin()
+	stmt, err := tx.Prepare("UPDATE matchesTbl SET " +  queryString + " WHERE MID = @MID")
+	_, err = stmt.Exec(sql.Named("Value", matchStatus.Value), sql.Named("MID", matchStatus.MID))
+	if err != nil {
+		log.Println("Rollback for change match status")
+		tx.Rollback()
+		json.NewEncoder(w).Encode(err.Error())
+	}
+	tx.Commit()
+	json.NewEncoder(w).Encode(true)
+}

@@ -45,6 +45,7 @@ func main() {
 	r.Handle("/api/match/saveOtherMatchDetails", authorization.IsAuthorized(routes.SaveOtherMatchDetails, constant.UserAny)).Methods("POST")
 	r.Handle("/api/match/getAllMatchPoints", authorization.IsAuthorized(routes.GetAllMatchPoints, constant.UserAny)).Methods("POST")
 	r.Handle("/api/match/getAllUserMatchPoints", authorization.IsAuthorized(routes.GetAllUserMatchPoints, constant.UserAny)).Methods("GET")
+	r.Handle("/api/match/changeMatchStatus", authorization.IsAuthorized(routes.ChangeMatchStatus, constant.UserAdmin)).Methods("POST")
 	//usersPlayers routes
 	r.Handle("/api/usersPlayers/createAvailability", authorization.IsAuthorized(routes.CreateAvailability, constant.UserAuthor)).Methods("GET")
 	r.Handle("/api/usersPlayers/getAvailability", authorization.IsAuthorized(routes.GetAvailability, constant.UserAny)).Methods("POST")

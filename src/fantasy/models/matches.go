@@ -65,3 +65,10 @@ type GetPoints struct {
 type ID struct {
 	UID int `json:"uid"`
 }
+
+type MatchStatus struct {
+	ID int `json:"id"`
+	Name string `json:"name"`
+	Value int `json:"value"`
+	MID int `json:"mid"`
+}
