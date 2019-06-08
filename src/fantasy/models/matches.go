@@ -46,6 +46,7 @@ type Points2 struct {
 	Total_pts int `json:"totalPts"`
 	MID int `json:"mid"`
 	PID int `json:"pid"`
+	Name string `json:"name"`
 }
 type TotalPoints struct {
 	Batting_pts int `json:"battingsPts"`
